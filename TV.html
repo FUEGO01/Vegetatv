@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VEGETA TV – Player M3U</title>
+<link rel="icon" href="logo.png">
+<style>
+  :root{
+    --bg:#0b0b0f; --card:#11131a; --ink:#e7f8ff; --muted:#a7b3c2; --accent:#00e6ff; --accent-2:#00c2ff;
+    --ok:#25d366; --warn:#ffcc00; --err:#ff4d4f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  a{color:var(--accent)}
+  /* Splash */
+  #splash{
+    position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;
+    z-index:9999;transition:opacity .6s ease;opacity:1;
+  }
+  #splash img{width:min(60vw,360px);filter:drop-shadow(0 0 22px rgba(0,230,255,.35))}
+  #splash.hide{opacity:0;pointer-events:none}
+  /* Layout */
+  header{
+    padding:18px 16px;border-bottom:1px solid #1a1d25;background:linear-gradient(180deg,#0e1118,transparent);
+    position:sticky;top:0;z-index:10;
+  }
+  .brand{display:flex;gap:12px;align-items:center}
+  .brand img{width:40px;height:40px;object-fit:contain}
+  .brand h1{font-size:20px;margin:0;letter-spacing:.5px}
+  .container{max-width:1100px;margin:18px auto;padding:0 14px}
+  .card{background:var(--card);border:1px solid #1a1d25;border-radius:16px;padding:14px}
+  .row{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:900px){.row{grid-template-columns:360px 1fr}}
+  /* Inputs */
+  .input, .btn{
+    width:100%;padding:12px 14px;border-radius:12px;border:1px solid #1c2130;background:#0f1220;color:var(--ink);
+  }
+  .btn{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;color:#001016;font-weight:700;cursor:pointer}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .ghost{background:#0f1220;border:1px dashed #2a3144;color:var(--muted)}
+  .hint{color:var(--muted);font-size:13px}
+  /* Tabs */
+  .tabs{display:flex;gap:8px;margin-top:10px}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:#0f1220;border:1px solid #1a1d25;cursor:pointer}
+  .tab.active{background:#132033;border-color:#1e3753;box-shadow:0 0 0 1px #1e3753 inset}
+  /* Lists */
+  .panel{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px;max-height:60vh;overflow:auto;padding-right:2px}
+  .item{
+    display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid #1a1d25;
+    border-radius:12px;background:#0f1220;cursor:pointer;transition:transform .05s ease;
+  }
+  .item:hover{transform:scale(1.01)}
+  .logo{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#0b0b0f;border:1px solid #1a1d25}
+  .meta{display:flex;flex-direction:column;gap:2px}
+  .name{font-weight:600}
+  .group{font-size:12px;color:var(--muted)}
+  .pill{font-size:12px;border:1px solid #244054;background:#0e1b2a;border-radius:999px;padding:4px 8px;color:#9ad7ff}
+  /* Player */
+  #playerWrap{position:sticky;top:80px;border-radius:16px;overflow:hidden}
+  video{width:100%;background:#000;min-height:220px;border-radius:12px}
+  /* Search */
+  .search{display:flex;gap:8px}
+  .search input{flex:1}
+  /* Footer */
+  footer{color:#8090a0;font-size:12px;text-align:center;padding:30px 10px}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash" role="img" aria-label="VEGETA TV – loading">
+  <img src="VEGETA TV Logo.jpg" alt="VEGETA TV Logo">
+</div>
+
+<header>
+  <div class="brand">
+    <img src="logo.png" alt="Logo">
+    <h1>VEGETA TV — Lecteur M3U</h1>
+  </div>
+</header>
+
+<div class="container row">
+  <!-- Left: player & inputs -->
+  <section class="card" id="playerWrap">
+    <video id="video" controls playsinline></video>
+    <div style="margin-top:12px" class="search">
+      <input id="m3uUrl" class="input" placeholder="Colle ton lien M3U (https://...get.php?username=...)" />
+      <button id="btnLoad" class="btn">Charger</button>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label class="ghost btn" style="display:inline-block;position:relative;overflow:hidden;width:auto">
+        <input id="file" type="file" accept=".m3u,.m3u8,.txt" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        Ouvrir un fichier .m3u
+      </label>
+      <span class="hint">Astuce : si le serveur bloque CORS, télécharge le fichier M3U puis ouvre-le ici.</span>
+    </div>
+    <div id="status" class="hint" style="margin-top:8px"></div>
+  </section>
+
+  <!-- Right: lists -->
+  <section class="card">
+    <div class="search">
+      <input id="q" class="input" placeholder="Rechercher chaîne / film / groupe…" />
+      <span id="count" class="pill">0 éléments</span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="live">TV en direct</button>
+      <button class="tab" data-tab="vod">VOD / Films & Séries</button>
+    </div>
+
+    <div id="list-live" class="panel"></div>
+    <div id="list-vod" class="panel" style="display:none"></div>
+  </section>
+</div>
+
+<footer>
+  Utilise uniquement des sources <b>autorisées</b> et respectue les droits. Certains flux peuvent ne pas se lire dans un navigateur.
+</footer>
+
+<!-- hls.js (lecture HLS dans les navigateurs qui ne le supportent pas nativement) -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script>
+/* ---------- Splash ---------- */
+(function(){
+  const splash = document.getElementById('splash');
+  setTimeout(()=> splash.classList.add('hide'), 1500);
+  setTimeout(()=> splash.remove(), 2100);
+})();
+
+/* ---------- State ---------- */
+let ALL_ITEMS = []; // {name,url,group,logo,isVod}
+let FILTER_TAB = 'live';
+const el = (id)=>document.getElementById(id);
+const status = el('status'), video = el('video');
+
+/* ---------- Player ---------- */
+let hls;
+function playUrl(url){
+  // Clean previous
+  if (hls){ hls.destroy(); hls = null; }
+  video.src = '';
+  // HLS (.m3u8)
+  if (/\.m3u8(\?|$)/i.test(url)){
+    if (Hls.isSupported()){
+      hls = new Hls({lowLatencyMode:true});
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, ()=> video.play().catch(()=>{}));
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')){
+      video.src = url; video.play().catch(()=>{});
+    } else {
+      msg("Ton navigateur ne supporte pas HLS.", "warn");
+    }
+  } else {
+    // mp4, etc.
+    video.src = url;
+    video.play().catch(()=>{});
+  }
+}
+
+/* ---------- UI helpers ---------- */
+function msg(text, level="info"){
+  const colors = {info:'', warn:'⚠️ ', err:'⛔ '};
+  status.textContent = (colors[level]||'') + text;
+}
+
+/* ---------- Tabs ---------- */
+for (const t of document.querySelectorAll('.tab')){
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    FILTER_TAB = t.dataset.tab;
+    document.getElementById('list-live').style.display = FILTER_TAB==='live'?'grid':'none';
+    document.getElementById('list-vod').style.display  = FILTER_TAB==='vod' ?'grid':'none';
+    render();
+  });
+}
+
+/* ---------- Search ---------- */
+el('q').addEventListener('input', render);
+
+/* ---------- Load from URL ---------- */
+el('btnLoad').addEventListener('click', async ()=>{
+  const url = el('m3uUrl').value.trim();
+  if (!url){ msg("Colle un lien M3U valide."); return; }
+  msg("Chargement du M3U…");
+  try{
+    const res = await fetch(url, {mode:'cors'});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    parseAndStore(text);
+    msg("Playlist chargée ✔️");
+  }catch(e){
+    msg("Impossible de charger le lien directement (CORS ou accès). Télécharge le fichier et ouvre-le avec le bouton.", "warn");
+    console.error(e);
+  }
+});
+
+/* ---------- Load from file ---------- */
+el('file').addEventListener('change', async (ev)=>{
+  const f = ev.target.files?.[0];
+  if (!f) return;
+  msg("Lecture du fichier M3U…");
+  const text = await f.text();
+  parseAndStore(text);
+  msg("Playlist chargée ✔️");
+});
+
+/* ---------- Parse M3U ---------- */
+function parseAndStore(text){
+  ALL_ITEMS = [];
+  if (!text.startsWith('#EXTM3U')) {
+    msg("Ce fichier ne ressemble pas à un M3U (#EXTM3U manquant).", "warn");
+  }
+  const lines = text.split(/\r?\n/);
+  for (let i=0;i<lines.length;i++){
+    const line = lines[i].trim();
+    if (line.startsWith('#EXTINF')){
+      const meta = line;
+      let url = '';
+      // Next non-empty line is usually the URL
+      let j = i+1;
+      while (j<lines.length && !lines[j].trim()) j++;
+      url = (lines[j]||'').trim();
+      // Extract attributes
+      const getAttr = (key)=>{
+        const m = meta.match(new RegExp(key+'="([^"]*)"','i'));
+        return m ? m[1] : '';
+      };
+      const tvgName = getAttr('tvg-name');
+      const nameMatch = meta.match(/,(.*)$/);
+      const name = (tvgName || (nameMatch?nameMatch[1].trim():'')) || 'Sans nom';
+      const group = getAttr('group-title') || 'Divers';
+      const logo  = getAttr('tvg-logo') || '';
+
+      // Heuristics VOD vs LIVE
+      const lowerGroup = group.toLowerCase();
+      const isVod = /\.(mp4|mkv|avi|mov)(\?|$)/i.test(url)
+                 || /vod|movie|series|film|pelicul|serie|cinema/.test(lowerGroup);
+
+      if (url && /^https?:\/\//i.test(url)){
+        ALL_ITEMS.push({name, url, group, logo, isVod});
+      }
+      i = j; // jump
+    }
+  }
+  render(true);
+}
+
+/* ---------- Render lists ---------- */
+function render(resetScroll=false){
+  const q = el('q').value.trim().toLowerCase();
+  const live = ALL_ITEMS.filter(x=>!x.isVod);
+  const vod  = ALL_ITEMS.filter(x=> x.isVod);
+
+  const filt = (arr)=> arr.filter(x=>{
+    if (!q) return true;
+    return [x.name, x.group].join(' ').toLowerCase().includes(q);
+  });
+
+  const liveF = filt(live), vodF = filt(vod);
+  el('count').textContent = `${(FILTER_TAB==='live'?liveF.length:vodF.length)} éléments`;
+  paint('list-live', liveF);
+  paint('list-vod',  vodF);
+  if (resetScroll){
+    document.getElementById('list-live').scrollTop = 0;
+    document.getElementById('list-vod').scrollTop  = 0;
+  }
+}
+function paint(id, items){
+  const root = document.getElementById(id);
+  root.innerHTML = '';
+  if (!items.length){
+    root.innerHTML = `<div class="hint">Aucun élément.</div>`;
+    return;
+  }
+  for (const it of items.slice(0, 5000)){ // garde une UI fluide
+    const div = document.createElement('div');
+    div.className = 'item';
+    const img = document.createElement('img');
+    img.className = 'logo';
+    img.src = it.logo || 'logo.png';
+    img.onerror = ()=>{ img.src='logo.png'; };
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = `<div class="name">${escapeHtml(it.name)}</div>
+                      <div class="group">${escapeHtml(it.group)}</div>`;
+    const badge = document.createElement('div');
+    badge.className = 'pill';
+    badge.textContent = it.isVod ? 'VOD' : 'LIVE';
+    div.appendChild(img); div.appendChild(meta); div.appendChild(badge);
+    div.addEventListener('click', ()=> playUrl(it.url));
+    root.appendChild(div);
+  }
+}
+function escapeHtml(s){return s.replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+</script>
+</body>
+</html>
