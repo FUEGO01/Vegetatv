@@ -1,0 +1,776 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VEGETA TV — HitRoom</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#05060a;
+      --panel:#0b0f16;
+
+      --ink:#eafcff;
+      --muted:rgba(234,252,255,.72);
+
+      /* Palette : cyan -> bleu -> violet clair */
+      --cyan:#00e5ff;
+      --cyan-2:#00c9ff;
+      --blue:#2f7dff;
+      --blue-deep:#0b2a6b;
+      --violet-light:#b8a0ff;
+
+      /* Halo rose/violet + décalage logo */
+      --pink:#ff4fd8;
+      --violet:#8a5bff;
+      --logo-shift:-10px; /* 👈 bouge le GIF un peu à gauche (ex: -6px / -14px) */
+
+      --accent-grad: linear-gradient(180deg,
+        var(--violet-light) 0%,
+        rgba(184,160,255,.92) 12%,
+        rgba(47,125,255,.92) 40%,
+        rgba(0,201,255,.95) 78%,
+        var(--cyan) 100%
+      );
+      --accent-grad-soft: linear-gradient(180deg,
+        rgba(184,160,255,.16) 0%,
+        rgba(47,125,255,.14) 44%,
+        rgba(0,201,255,.14) 100%
+      );
+
+      --anim-speed: 14s;
+      --accent-anim: linear-gradient(90deg,
+        var(--violet-light) 0%,
+        var(--blue) 38%,
+        var(--cyan) 72%,
+        var(--violet-light) 100%
+      );
+      --accent-anim-soft: linear-gradient(90deg,
+        rgba(184,160,255,.16) 0%,
+        rgba(47,125,255,.14) 50%,
+        rgba(0,201,255,.14) 100%
+      );
+
+      --danger:#ff3b30;
+      --success:#18ff6d;
+
+      --shadow:0 14px 50px rgba(47,125,255,.16);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 700px at 50% -10%, rgba(184,160,255,.16) 0%, rgba(5,6,10,1) 58%),
+        radial-gradient(1100px 700px at 50% 110%, rgba(0,229,255,.18) 0%, transparent 58%),
+        radial-gradient(900px 600px at 30% 45%, rgba(47,125,255,.10) 0%, transparent 60%),
+        #05060a;
+      color:var(--ink);
+      font-family: Oxanium, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      display:flex; align-items:flex-start; justify-content:center;
+    }
+
+    .wrap{width:100%; max-width:860px; padding:28px 18px 60px}
+
+    @keyframes gradientFlow{
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* HERO */
+    .hero{
+      width:min(960px,94vw);
+      margin:12px auto 8px;
+      display:grid;
+      grid-template-columns: 1fr;
+      place-items:center;
+      gap:10px;
+    }
+    @media (min-width: 720px){
+      .hero{
+        grid-template-columns: auto 1fr;
+        align-items:end;
+        column-gap:24px;
+      }
+    }
+
+    /* ✅ Logo : halo rose/violet “qui sort” + petit décalage à gauche */
+    .hero__logo{
+      position:relative;
+      display:flex; justify-content:center; align-items:center;
+
+      transform: translateX(var(--logo-shift));
+
+      filter:
+        drop-shadow(0 0 24px rgba(47,125,255,.28))
+        drop-shadow(0 0 26px rgba(255,79,216,.16));
+    }
+    .hero__logo::before{
+      content:"";
+      position:absolute;
+      inset:-18px;
+      border-radius:22px;
+      background:
+        radial-gradient(closest-side, rgba(255,79,216,.30), transparent 65%),
+        radial-gradient(closest-side, rgba(138,91,255,.26), transparent 70%),
+        conic-gradient(from 180deg,
+          rgba(255,79,216,0) 0%,
+          rgba(255,79,216,.52) 25%,
+          rgba(138,91,255,.52) 55%,
+          rgba(0,229,255,.30) 75%,
+          rgba(255,79,216,0) 100%
+        );
+      filter: blur(10px);
+      opacity:.95;
+      z-index:0;
+      pointer-events:none;
+    }
+    .hero__logo::after{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:18px;
+      background: linear-gradient(135deg,
+        rgba(255,79,216,0) 0%,
+        rgba(255,79,216,.16) 40%,
+        rgba(138,91,255,.16) 60%,
+        rgba(0,229,255,0) 100%
+      );
+      filter: blur(6px);
+      opacity:.9;
+      z-index:0;
+      pointer-events:none;
+    }
+    .hero__logo img{
+      position:relative;
+      z-index:1;
+
+      height:47vh;
+      max-height:560px;
+      width:auto;
+    }
+
+    .hero__tag{ align-self:end; text-align:center; }
+    @media (min-width: 720px){ .hero__tag{ text-align:left; } }
+    .tagline{
+      margin:6px 0 0;
+      font-size:14px;
+      color:var(--muted);
+      letter-spacing:.02em;
+      text-shadow:0 0 12px rgba(0,229,255,.16);
+    }
+
+    /* Cards */
+    .card{
+      background: linear-gradient(180deg, #0c1116 0%, var(--panel) 100%);
+      border:1px solid rgba(47,125,255,.18);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+      margin:18px 0;
+    }
+    .card h2{
+      margin:0 0 12px;
+      font-size:22px;
+      background: var(--accent-anim);
+      background-size: 300% 300%;
+      animation: gradientFlow var(--anim-speed) ease-in-out infinite;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    /* Links */
+    .links{ display:grid; gap:14px; }
+    @media(min-width:720px){ .links{ grid-template-columns:1fr 1fr; } }
+
+    /* ✅ Intérieur NOIR (sans voile blanc) + effets en pseudo-elements */
+    .link{
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:18px 22px;
+
+      /* noir propre */
+      background: linear-gradient(180deg,
+        rgba(6,8,12,.96) 0%,
+        rgba(5,6,10,.94) 55%,
+        rgba(4,5,8,.96) 100%
+      );
+
+      border:1.5px solid rgba(0,229,255,.20);
+      border-radius:12px;
+
+      color:var(--ink);
+      font-weight:700; font-size:18px; text-decoration:none;
+
+      /* vignette interne pour garder le noir profond */
+      box-shadow:
+        0 14px 40px rgba(0,0,0,.55),
+        0 0 0 1px rgba(47,125,255,.10) inset,
+        0 0 70px rgba(0,0,0,.58) inset;
+
+      transition:.18s transform, .18s filter;
+    }
+    .link:hover{
+      transform: translateY(-2px) scale(1.01);
+      filter:brightness(1.08);
+    }
+
+    /* contour animé (gauche -> droite) */
+    @keyframes borderSweep{
+      0%   { background-position: 0% 50%;   opacity: .50; }
+      50%  { opacity: .85; }
+      100% { background-position: 200% 50%; opacity: .50; }
+    }
+
+    .link::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      padding:2px;
+      border-radius:12px;
+      pointer-events:none;
+
+      background: linear-gradient(90deg,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0) 35%,
+        rgba(0,229,255,.95) 50%,
+        rgba(47,125,255,.85) 62%,
+        rgba(184,160,255,.80) 75%,
+        rgba(0,0,0,0) 90%,
+        rgba(0,0,0,0) 100%
+      );
+      background-size:200% 100%;
+      animation: borderSweep 6.8s ease-in-out infinite;
+
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+
+      filter:
+        drop-shadow(0 0 14px rgba(0,229,255,.22))
+        drop-shadow(0 0 18px rgba(47,125,255,.18));
+    }
+
+    /* ✅ Sweep “glace” (droite -> gauche) — encore plus BRILLANT */
+    @keyframes glassSweep{
+      0%   { transform: translateX(150%) skewX(-12deg); opacity: 0; }
+      10%  { opacity: .92; }
+      50%  { opacity: .72; }
+      90%  { opacity: .92; }
+      100% { transform: translateX(-150%) skewX(-12deg); opacity: 0; }
+    }
+
+    .link::after{
+      content:"";
+      position:absolute;
+      inset:-45% -75%;
+      border-radius:14px;
+      pointer-events:none;
+
+      background: linear-gradient(115deg,
+        rgba(0,0,0,0) 0%,
+        rgba(255,255,255,0) 34%,
+        rgba(0,229,255,.42) 44%,
+        rgba(255,255,255,.98) 50%,
+        rgba(184,160,255,.42) 56%,
+        rgba(255,255,255,0) 66%,
+        rgba(0,0,0,0) 82%
+      );
+
+      animation: glassSweep 7.0s ease-in-out infinite;
+
+      filter:
+        blur(.06px)
+        drop-shadow(0 0 18px rgba(255,255,255,.55))
+        drop-shadow(0 0 32px rgba(0,229,255,.34))
+        drop-shadow(0 0 44px rgba(47,125,255,.20));
+
+      opacity: 1;
+      mix-blend-mode: normal;
+    }
+
+    /* ordre des couches */
+    .link::before{ z-index:0; }
+    .link::after { z-index:1; }
+    .link > *    { position:relative; z-index:2; }
+
+    .badge{
+      font-size:12px; padding:4px 10px; border-radius:999px; color:#061018;
+      background: var(--accent-anim);
+      background-size: 300% 300%;
+      animation: gradientFlow calc(var(--anim-speed) * 1.15) ease-in-out infinite;
+      flex:0 0 auto;
+      border:none;
+    }
+
+    /* Votes */
+    .votes{ display:flex; flex-direction:column; gap:14px; }
+    .vote-item{
+      display:flex; align-items:center; justify-content:space-between;
+      background:#0d141b; border-radius:12px; padding:10px 12px;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .btn{
+      border:none; cursor:pointer; padding:12px 16px; border-radius:12px;
+      background:#0d141b; color:var(--ink); font-weight:700; font-size:16px;
+      transition:.15s transform, .15s filter;
+    }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.1); }
+    .btn-like{ background:rgba(24,255,109,.15); }
+    .btn-dislike{ background:rgba(255,59,48,.18); }
+    .counter{
+      min-width:54px; text-align:center; padding:10px 12px; border-radius:10px;
+      background:#0a0f14; font-weight:700; border:1px solid rgba(255,255,255,.06);
+      margin-left:12px;
+    }
+
+    /* Comments */
+    input, textarea{
+      width:100%; padding:12px 14px;
+      border-radius:12px; border:1px solid rgba(255,255,255,.08);
+      background:#0a0f14; color:var(--ink);
+    }
+    textarea{ min-height:110px; resize:vertical; }
+
+    .send{
+      background: var(--accent-anim);
+      background-size: 300% 300%;
+      animation: gradientFlow calc(var(--anim-speed) * 1.15) ease-in-out infinite;
+      color:#061018; font-weight:800; padding:12px 18px; border-radius:12px;
+      cursor:pointer; border:none;
+    }
+
+    .comment{
+      margin-top:12px; padding:12px 14px; border-radius:12px;
+      background:#0a0f14; border:1px solid rgba(255,255,255,.08);
+    }
+    .comment strong{
+      background: var(--accent-anim);
+      background-size: 300% 300%;
+      animation: gradientFlow var(--anim-speed) ease-in-out infinite;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+      background:#08141a; border:1px solid rgba(47,125,255,.22);
+      color:var(--ink); padding:10px 14px; border-radius:12px;
+      opacity:0; transition:.25s;
+      z-index:9999;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+
+    @media (prefers-reduced-motion: reduce){
+      .card h2, .comment strong, .badge, .send, .link{
+        animation:none !important;
+        background-size: 100% 100% !important;
+      }
+      .link::before{ animation:none !important; }
+      .link::after { animation:none !important; }
+    }
+
+    /* ====== MODAL (pour le warning) ====== */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0,0,0,.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 99999;
+    }
+    .modal.is-open{ display:grid; }
+
+    .modal__dialog{
+      width: min(560px, 92vw);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(8,10,14,.96) 0%, rgba(5,6,10,.98) 100%);
+      box-shadow:
+        0 28px 80px rgba(0,0,0,.70),
+        0 0 0 1px rgba(47,125,255,.18) inset;
+      position: relative;
+      overflow: hidden;
+    }
+    .modal__dialog::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      padding:2px;
+      border-radius:18px;
+      pointer-events:none;
+      background: linear-gradient(90deg,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0) 35%,
+        rgba(0,229,255,.92) 50%,
+        rgba(47,125,255,.78) 62%,
+        rgba(184,160,255,.72) 75%,
+        rgba(0,0,0,0) 92%,
+        rgba(0,0,0,0) 100%
+      );
+      background-size:200% 100%;
+      animation: borderSweep 7.2s ease-in-out infinite;
+
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+
+      filter:
+        drop-shadow(0 0 18px rgba(0,229,255,.18))
+        drop-shadow(0 0 22px rgba(47,125,255,.14));
+    }
+
+    .modal__content{ padding: 18px 18px 16px; }
+
+    .modal__top{
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+
+    .modal__title{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.02em;
+      background: var(--accent-anim);
+      background-size:300% 300%;
+      animation: gradientFlow var(--anim-speed) ease-in-out infinite;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    .modal__close{
+      width:40px; height:40px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,15,20,.75);
+      color: var(--ink);
+      cursor:pointer;
+    }
+    .modal__close:hover{ filter:brightness(1.1); }
+
+    .modal__text{
+      display:grid;
+      gap:10px;
+      color: rgba(234,252,255,.88);
+      line-height:1.35;
+      font-size:14px;
+    }
+    .modal__text .lang{
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(10,15,20,.55);
+    }
+    .modal__text .lang b{
+      display:block;
+      font-size:12px;
+      color: rgba(234,252,255,.70);
+      margin-bottom:6px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .modal__actions{
+      display:flex;
+      gap:10px;
+      padding: 0 18px 18px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .modal__btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 14px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .modal__btn--ghost{
+      background: rgba(10,15,20,.75);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--ink);
+    }
+
+    .modal__btn--go{
+      background: var(--accent-anim);
+      background-size:300% 300%;
+      animation: gradientFlow calc(var(--anim-speed) * 1.1) ease-in-out infinite;
+      color:#061018;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__logo">
+        <img src="https://i.giphy.com/media/SDXCrfeb3q6ni3lcSa/giphy.gif" alt="VEGETA TV">
+      </div>
+      <div class="hero__tag">
+        <p class="tagline">Telegram Community</p>
+      </div>
+    </section>
+
+    <!-- Telegram -->
+    <div class="card">
+      <h2>Join our Telegram groups</h2>
+
+      <div class="links">
+        <!-- ✅ PLUS un <a> : le cadre ne fait rien -->
+        <div class="link" role="group" aria-label="Telegram Group 1">
+          <span class="link__icon" aria-hidden="true">📢</span>
+          <span class="link__text">Telegram Group 1</span>
+
+          <!-- ✅ Seul ACTIVE est cliquable -->
+          <button class="badge" type="button"
+            data-join="https://t.me/+gi5VhJ_kLgw3MDc0"
+            data-warn="g1">ACTIVE</button>
+        </div>
+
+        <div class="link" role="group" aria-label="Telegram Group 2">
+          <span class="link__icon" aria-hidden="true">📢</span>
+          <span class="link__text">Telegram Group 2</span>
+
+          <button class="badge" type="button"
+            data-join="https://t.me/+WVYQ9wbliIIzMjk0"
+            data-warn="g2">ACTIVE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Votes -->
+    <div class="card">
+      <h2>Give your opinion</h2>
+      <div class="votes">
+        <div class="vote-item">
+          <button id="likeBtn" class="btn btn-like" type="button">👍 Like</button>
+          <div class="counter" id="likeCount">0</div>
+        </div>
+        <div class="vote-item">
+          <button id="dislikeBtn" class="btn btn-dislike" type="button">👎 Dislike</button>
+          <div class="counter" id="dislikeCount">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="card">
+      <h2>Leave a comment</h2>
+      <input type="text" id="name" placeholder="Your name" maxlength="32" autocomplete="name">
+      <textarea id="message" placeholder="Your comment" maxlength="400"></textarea>
+      <button id="sendComment" class="send" type="button">Send</button>
+      <div id="commentList"></div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast">Saved</div>
+
+  <!-- ✅ POP-UP warning (EN + ES) -->
+  <div id="warnModal" class="modal" aria-hidden="true">
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="warnTitle">
+      <div class="modal__content">
+        <div class="modal__top">
+          <h3 class="modal__title" id="warnTitle">⚠️ Warning / Advertencia</h3>
+          <button class="modal__close" type="button" id="warnClose" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modal__text">
+          <div class="lang">
+            <b>English</b>
+            <span id="warnEn"></span>
+          </div>
+          <div class="lang">
+            <b>Español</b>
+            <span id="warnEs"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal__actions">
+        <button class="modal__btn modal__btn--ghost" type="button" id="warnCancel">Close</button>
+        <button class="modal__btn modal__btn--go" type="button" id="warnGo">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // ✅ IMPORTANT : le cadre n'est plus un lien, donc aucun clic parasite.
+    // Optionnel : on force le curseur normal sur la carte, pointer sur ACTIVE.
+    document.querySelectorAll(".link").forEach(el => el.style.cursor = "default");
+    document.querySelectorAll(".badge[data-join]").forEach(el => el.style.cursor = "pointer");
+
+    let pendingJoinUrl = null;
+
+    const modal     = $("warnModal");
+    const btnClose  = $("warnClose");
+    const btnCancel = $("warnCancel");
+    const btnGo     = $("warnGo");
+
+    const titleEl = $("warnTitle");
+    const enEl    = $("warnEn");
+    const esEl    = $("warnEs");
+
+    const WARNINGS = {
+      g1: {
+        title: "⚠️ Warning / Advertencia",
+        en: "If you don’t have a profile photo, you can’t join the group.",
+        es: "Si no tienes foto de perfil, no puedes entrar en el grupo."
+      },
+      g2: {
+        title: "⚠️ Warning / Advertencia",
+        en: "If you don’t have a profile photo, you can’t join the group.",
+        es: "Si no tienes foto de perfil, no puedes entrar en el grupo."
+      }
+    };
+
+    function openWarn(url, key){
+      pendingJoinUrl = url || null;
+
+      const cfg = WARNINGS[key] || WARNINGS.g1;
+      titleEl.textContent = cfg.title;
+      enEl.textContent = cfg.en;
+      esEl.textContent = cfg.es;
+
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeWarn(){
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      pendingJoinUrl = null;
+    }
+
+    btnClose.addEventListener("click", closeWarn);
+    btnCancel.addEventListener("click", closeWarn);
+
+    btnGo.addEventListener("click", ()=>{
+      if(pendingJoinUrl){
+        window.open(pendingJoinUrl, "_blank", "noopener");
+      }
+      closeWarn();
+    });
+
+    modal.addEventListener("click", (e)=>{
+      if(e.target === modal) closeWarn();
+    });
+
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape" && modal.classList.contains("is-open")) closeWarn();
+    });
+
+    // ✅ Seul ACTIVE ouvre le pop-up
+    document.querySelectorAll(".badge[data-join][data-warn]").forEach((b)=>{
+      b.addEventListener("click", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        openWarn(b.dataset.join, b.dataset.warn);
+      });
+    });
+  </script>
+  
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, updateDoc, onSnapshot,
+      collection, addDoc, query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmWj8-hudBFCWuFhstuH167jSFYNPapwM",
+      authDomain: "vegeta-9d07d.firebaseapp.com",
+      projectId: "vegeta-9d07d",
+      storageBucket: "vegeta-9d07d.firebasestorage.app",
+      messagingSenderId: "878968381821",
+      appId: "1:878968381821:web:b1693238e232099d0e6c14",
+      measurementId: "G-EY4YQC0NK8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Refs
+    const likeRef = doc(db, "stats", "likes");
+    const dislikeRef = doc(db, "stats", "dislikes");
+    const commentsRef = collection(db, "comments");
+
+    // Helpers
+    const $ = (id)=>document.getElementById(id);
+    function toast(msg="Saved"){
+      const t=$("toast");
+      t.textContent=msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"),1400);
+    }
+
+    // Live counters
+    onSnapshot(likeRef, (s)=>{ if(s.exists()) $("likeCount").textContent = s.data().count ?? 0; });
+    onSnapshot(dislikeRef, (s)=>{ if(s.exists()) $("dislikeCount").textContent = s.data().count ?? 0; });
+
+    // Voting
+    async function vote(ref, key){
+      if(localStorage.getItem("voted")){
+        toast("You already voted");
+        return;
+      }
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        await updateDoc(ref, { count: (snap.data().count || 0) + 1 });
+        localStorage.setItem("voted", key);
+        toast("Thanks!");
+      }
+    }
+    $("likeBtn").addEventListener("click", ()=>vote(likeRef, "like"));
+    $("dislikeBtn").addEventListener("click", ()=>vote(dislikeRef, "dislike"));
+
+    // Comments
+    $("sendComment").addEventListener("click", async ()=>{
+      const name = $("name").value.trim();
+      const msg  = $("message").value.trim();
+      if(!name || !msg){ toast("Please fill in all fields"); return; }
+      await addDoc(commentsRef, { name, message: msg, createdAt: serverTimestamp() });
+      $("name").value=""; $("message").value="";
+      toast("Comment posted");
+    });
+
+    onSnapshot(query(commentsRef, orderBy("createdAt","desc")), (snap)=>{
+      const box = $("commentList");
+      box.innerHTML = "";
+      snap.forEach(d=>{
+        const data = d.data();
+        const div = document.createElement("div");
+        div.className = "comment";
+        div.innerHTML = `<strong>${data.name || "Guest"}</strong><div>${data.message || ""}</div>`;
+        box.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html
